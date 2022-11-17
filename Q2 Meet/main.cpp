@@ -361,7 +361,7 @@ int main()
     }
     for (int i = 0; i < personCount; i++)
     {
-        pthread_join(personThreadIds[i++], NULL);
+        pthread_join(personThreadIds[i], NULL);
     }
 
     return 0;
