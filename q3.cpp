@@ -15,6 +15,37 @@
 using namespace std;
 
 
+void selection_sort(int v[],int low,int high)
+{
+    int i=high-low+1;
+
+    int j=low;
+    int min=v[low];
+    int min_index=low;
+    i--;
+    while(i--)
+    {
+      
+        for(int k=j+1;k<=high;k++)
+        {
+            if(v[k]<min)
+            {
+                min=v[k];
+                min_index=k;
+            }
+
+        }
+        v[min_index]=v[j];
+        v[j]=min;
+       
+        j++;
+        min=v[j];
+        min_index=j;
+    }
+    return;
+}
+
+
 void merge(int v[],int low,int mid,int high)
 {
     int v1[mid-low+2],v2[high-mid+1];
@@ -61,23 +92,33 @@ void merge(int v[],int low,int mid,int high)
 
 void mergeSort(int v[],int low,int high)
 {
+
+
     
     if(low>=high)
         return;
 
     
+    if(high-low+1 <5)
+    {
+        selection_sort(v,low,high);
+        return;
+    }
+
     pid_t left_child,right_child,wpid;
+   
     int status,mid;
 
     mid=(low+high)/2;
-
+ 
 
     left_child=fork();
 
-    
+ 
     if(left_child == 0)
     {
         mergeSort(v,low,mid);
+
         _exit(0);
     }
     else
@@ -117,16 +158,34 @@ int main()
 
     int *v;
 
-    int protection=PROT_READ | PROT_WRITE;
+    // int protection=PROT_READ | PROT_WRITE;
 
-    int visibility=MAP_SHARED | MAP_ANONYMOUS;
+    // int visibility=MAP_SHARED | MAP_ANONYMOUS;
 
     size=n*sizeof(int);
-    v=(int*)mmap(NULL,size,protection,visibility,-1,0);
+    //v=(int*)mmap(NULL,size,protection,visibility,-1,0);
+
+    int shmid;
+
+
+    key_t key;
+
+
+    key=ftok("q3.cpp",1);
+    
+    shmid=shmget(key,size,0666 | IPC_CREAT);
+
+    if(shmid == -1)
+    {
+        cout<<"Error";
+        return 0;
+    }
+    
+    v=(int*)shmat(shmid,NULL,0);
 
     input_values(v,n);
 
-
+   
     cout<<endl;
     mergeSort(v,0,n-1);
 
