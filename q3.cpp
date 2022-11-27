@@ -10,7 +10,7 @@
 #include<stdlib.h>
 #include<sys/wait.h>
 #include<climits>
-
+#include<time.h>
 
 using namespace std;
 
@@ -155,6 +155,7 @@ int main()
     int n;
     cin>>n;
     
+    clock_t start,end;
 
     int *v;
 
@@ -165,7 +166,7 @@ int main()
     size=n*sizeof(int);
     //v=(int*)mmap(NULL,size,protection,visibility,-1,0);
 
-    int shmid;
+    int id;
 
 
     key_t key;
@@ -173,20 +174,23 @@ int main()
 
     key=ftok("q3.cpp",1);
     
-    shmid=shmget(key,size,0666 | IPC_CREAT);
+    id=shmget(key,size,0666 | IPC_CREAT);
 
-    if(shmid == -1)
+    if(id == -1)
     {
+        printf("%s",strerror(errno));
         cout<<"Error";
         return 0;
     }
     
-    v=(int*)shmat(shmid,NULL,0);
+    v=(int*)shmat(id,NULL,0);
 
     input_values(v,n);
 
    
     cout<<endl;
+    start=clock();
+
     mergeSort(v,0,n-1);
 
     for(int i=0;i<n;i++)
@@ -195,5 +199,16 @@ int main()
     }
 
     cout<<endl;
+    int a=shmdt(v);
+
+    int detach=shmctl(id,IPC_RMID,NULL);
+
+    end=clock();
+
+    double cpu_time_used=((double)(end-start))/CLOCKS_PER_SEC;
+
+    cout<<cpu_time_used<<endl;
+
+   
     return 0;
 }

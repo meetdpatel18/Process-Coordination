@@ -10,11 +10,43 @@
 #include<stdlib.h>
 #include<sys/wait.h>
 #include<climits>
+#include<time.h>
 
 using namespace std;
 
 vector<int>v;
 int n1;
+clock_t start,e;
+
+void selection_sort(int low,int high)
+{
+    int i=high-low+1;
+
+    int j=low;
+    int min=v[low];
+    int min_index=low;
+    i--;
+    while(i--)
+    {
+      
+        for(int k=j+1;k<=high;k++)
+        {
+            if(v[k]<min)
+            {
+                min=v[k];
+                min_index=k;
+            }
+
+        }
+        v[min_index]=v[j];
+        v[j]=min;
+       
+        j++;
+        min=v[j];
+        min_index=j;
+    }
+    return;
+}
 
 void merge(int low,int mid,int high)
 {
@@ -25,7 +57,7 @@ void merge(int low,int mid,int high)
     for( i=low;i<=mid;i++)
     {
         v1[zz]=v[i];
-        cout<<"v1[zz]"<<" "<<v1[zz]<<endl;
+        //cout<<"v1[zz]"<<" "<<v1[zz]<<endl;
         zz++;
     }
 
@@ -36,7 +68,7 @@ void merge(int low,int mid,int high)
     for(j=mid+1;j<=high;j++)
     {
         v2[k]=v[j];
-        cout<<"v2[k]"<<" "<<v2[k]<<endl;
+        //cout<<"v2[k]"<<" "<<v2[k]<<endl;
         k++;
     }
 
@@ -50,13 +82,13 @@ void merge(int low,int mid,int high)
         if(v1[i] >= v2[j])
             {
                 v[k]=v2[j];
-                cout<<"v[k]"<<" "<<v[k]<<endl;
+                //cout<<"v[k]"<<" "<<v[k]<<endl;
                 j++;
             }
         else
         {
             v[k]=v1[i];
-            cout<<"v[k]"<<" "<<v[k]<<endl;
+            //cout<<"v[k]"<<" "<<v[k]<<endl;
             i++;
         }
     }
@@ -78,8 +110,8 @@ void* mergesort(void* arguements)
     int low=args.low;
     int high=args.high;
 
-    cout<<"low1"<<" "<<low<<endl;
-    cout<<"high1"<<" "<<high<<endl;
+    //cout<<"low1"<<" "<<low<<endl;
+    //cout<<"high1"<<" "<<high<<endl;
 
     if(low>=high)
     {
@@ -87,9 +119,15 @@ void* mergesort(void* arguements)
         return NULL;
     }
 
+    if(high-low+1 <5)
+    {
+        selection_sort(low,high);
+        pthread_exit(NULL);
+        return NULL;
+    }
 
     int mid=(low+high)/2;
-    cout<<"mid1"<<" "<<mid<<endl;
+    //cout<<"mid1"<<" "<<mid<<endl;
 
     pthread_t left;
     pthread_t right;
@@ -121,15 +159,25 @@ void* mergesort(void* arguements)
 void solve(int low,int high)
 {
 
+
     int a=low;
     int b=high;
 
-    cout<<"low"<<" "<<low<<endl;
-    cout<<"high"<<" "<<high<<endl;
+    if(high-low+1 <5)
+    {
+        selection_sort(low,high);
+        e=clock();
+        double cpu_time_used=((double)(e-start))/CLOCKS_PER_SEC;
+        cout<<cpu_time_used<<endl;
+        return;
+    }
+
+    //cout<<"low"<<" "<<low<<endl;
+    //cout<<"high"<<" "<<high<<endl;
 
     int mid=(low+high)/2;
 
-    cout<<"mid"<<" "<<mid<<endl;
+    //cout<<"mid"<<" "<<mid<<endl;
 
     pthread_t left;
     pthread_t right;
@@ -159,6 +207,12 @@ void solve(int low,int high)
     }
 
     cout<<endl;
+
+    e=clock();
+
+    double cpu_time_used=((double)(e-start))/CLOCKS_PER_SEC;
+
+    cout<<cpu_time_used<<endl;
     pthread_exit(NULL);
 }
 
@@ -185,6 +239,8 @@ int main()
     }
 
     v=v1;
+    
+    start=clock();
     solve(0,n-1);
 
     return 0;
