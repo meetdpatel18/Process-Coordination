@@ -28,13 +28,16 @@ Input can be positive or negative number
 - NORMAL IMPLEMENTATION is FASTER than THREAD AND FORK 
 - THREAD IMPLEMENTATION is FASTER than FORK
 
+
 ### SAMPLE INPUT
 ![Screenshot (143)](https://user-images.githubusercontent.com/110759150/204229346-dd7a89d1-1e8f-45e0-8c0f-4742fca17d5b.png)
+
 
 ### NORMAL IMPLEMENTATION
 ![Screenshot (149)](https://user-images.githubusercontent.com/110759150/204229658-0d2c6e7f-baa8-4153-8e22-a0244bef4393.png)
 
 ![Screenshot (144)](https://user-images.githubusercontent.com/110759150/204230061-6ee1cfb5-5e44-4647-b286-815fe3b23d35.png)
+
 
 ### SHARED MEMORY AND FORK IMPLEMENTATION
 ![Screenshot (145)](https://user-images.githubusercontent.com/110759150/204230471-27be7c9f-682f-4fcf-906e-eba5916e56c9.png)
@@ -44,3 +47,4 @@ Input can be positive or negative number
 ### THREAD IMPLEMENTATION
 ![Screenshot (147)](https://user-images.githubusercontent.com/110759150/204231169-2f9e74b6-592b-4cd8-86e8-48cb912d9f63.png)
 
+![Screenshot (148)](https://user-images.githubusercontent.com/110759150/204231502-8636103e-5631-49ed-8f72-7c7b42b93d26.png)
