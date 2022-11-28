@@ -40,3 +40,7 @@ Input can be positive or negative number
 ![Screenshot (145)](https://user-images.githubusercontent.com/110759150/204230471-27be7c9f-682f-4fcf-906e-eba5916e56c9.png)
 
 ![Screenshot (146)](https://user-images.githubusercontent.com/110759150/204230670-ca11c5a8-a5a9-4528-a654-f2486c233430.png)
+
+### THREAD IMPLEMENTATION
+![Screenshot (147)](https://user-images.githubusercontent.com/110759150/204231169-2f9e74b6-592b-4cd8-86e8-48cb912d9f63.png)
+
