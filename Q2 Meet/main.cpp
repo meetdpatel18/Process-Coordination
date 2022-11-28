@@ -5,18 +5,18 @@
 #include <unistd.h>
 #include "logger.h"
 
+using namespace std;
+
 //----------Tap Variables-------------
 int tapCount;
 vector<bool> freeTaps;
 // free Tap Semaphore
-vector<sem_t> freeTapArrReadLock;
 vector<sem_t> freeTapArrWriteLock;
 vector<int> lastPersonIdTapAccessed;
 
 //----------Scotch Brite Variables-------------
 vector<bool> freeScotch;
 // free Scotch Semaphore
-vector<sem_t> freeScotchArrReadLock;
 vector<sem_t> freeScotchArrWriteLock;
 vector<int> lastPersonIdScotchAccessed;
 
@@ -32,41 +32,14 @@ vector<int> washWithTapTime{5, 3, 1};
 
 unordered_map<int, string> indexToUtensil;
 
-class Wash
-{
-public:
-    int startTime;
-    int endTime;
-    string res;
-
-    Wash(int startTime, int endTime, string res)
-    {
-        this->startTime = startTime;
-        this->endTime = endTime;
-        this->res = res;
-    }
-};
-
-bool comp(Wash &w1, Wash &w2)
-{
-    if (w1.startTime < w2.startTime)
-        return true;
-    else if (w1.startTime > w2.startTime)
-        return false;
-
-    return w1.endTime <= w2.endTime;
-}
-
-vector<Wash> resVect;
-sem_t resVectReadLock;
-sem_t resVectWriteLock;
-
 void initSemaphores()
 {
+    freeTapArrWriteLock.resize(tapCount);
+    freeScotchArrWriteLock.resize(tapCount - 1);
+
     // Initializing Tap variables
     for (int i = 0; i < tapCount; i++)
     {
-        sem_init(&freeTapArrReadLock[i], 0, 1);
         sem_init(&freeTapArrWriteLock[i], 0, 1);
         freeTaps.push_back(true);
         lastPersonIdTapAccessed.push_back(-1);
@@ -75,7 +48,6 @@ void initSemaphores()
     // Initializing Scotch variables
     for (int i = 0; i < tapCount - 1; i++)
     {
-        sem_init(&freeScotchArrReadLock[i], 0, 1);
         sem_init(&freeScotchArrWriteLock[i], 0, 1);
         freeScotch.push_back(true);
         lastPersonIdScotchAccessed.push_back(-1);
@@ -88,9 +60,6 @@ void initSemaphores()
     indexToUtensil[0] = "Plate";
     indexToUtensil[1] = "Glass";
     indexToUtensil[2] = "Spoon";
-
-    sem_init(&resVectReadLock, 0, 1);
-    sem_init(&resVectWriteLock, 0, 1);
 }
 
 bool isTapAvailableThenTake(int tapNumber)
@@ -104,7 +73,7 @@ bool isTapAvailableThenTake(int tapNumber)
         isAvailable = true;
     }
 
-    sem_post(&freeTapArrReadLock[tapNumber]);
+    sem_post(&freeTapArrWriteLock[tapNumber]);
     return isAvailable;
 }
 
@@ -114,7 +83,7 @@ void releaseTap(int tapNumber)
 
     freeTaps[tapNumber] = true;
 
-    sem_post(&freeTapArrReadLock[tapNumber]);
+    sem_post(&freeTapArrWriteLock[tapNumber]);
 }
 
 bool isScotchAvailableThenTake(int scotchNumber)
@@ -128,7 +97,7 @@ bool isScotchAvailableThenTake(int scotchNumber)
         isAvailable = true;
     }
 
-    sem_post(&freeScotchArrReadLock[scotchNumber]);
+    sem_post(&freeScotchArrWriteLock[scotchNumber]);
     return isAvailable;
 }
 
@@ -138,49 +107,7 @@ void releaseScotch(int scotchNumber)
 
     freeScotch[scotchNumber] = true;
 
-    sem_post(&freeScotchArrReadLock[scotchNumber]);
-}
-
-void pushToQueue(Wash w)
-{
-    sem_wait(&resVectWriteLock);
-    resVect.push_back(w);
-    sem_post(&resVectReadLock);
-}
-
-void performWash(int tapNumber, int scotchNumber, int personId, int &currTime, bool &scotchTaken, int utensilNumber)
-{
-    // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
-    if (lastPersonIdScotchAccessed[scotchNumber] == -1)
-    {
-        lastPersonIdScotchAccessed[scotchNumber] = personId;
-    }
-    // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
-    else
-    {
-        currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[scotchNumber]]);
-        lastPersonIdScotchAccessed[scotchNumber] = personId;
-    }
-
-    scotchTaken = true;
-    int startTime = currTime;
-    currTime = currTime + washWithScotchTime[utensilNumber];
-
-    string s = "Person " + to_string(personId) + " Washed " + indexToUtensil[utensilNumber] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(scotchNumber) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
-    Wash w(startTime, currTime, s);
-    pushToQueue(w);
-    // delete(w);
-
-    personEndTime[personId] = currTime;
-    releaseScotch(scotchNumber);
-
-    startTime = currTime;
-    // after releasing the scotch wash the current utensil
-    currTime = currTime + washWithTapTime[utensilNumber];
-
-    s = "Person " + to_string(personId) + " Washed " + indexToUtensil[utensilNumber] + " from tap " + to_string(tapNumber) + " with water start at: " + to_string(startTime) + " and finish at: " + to_string(currTime);
-    Wash w1(startTime, currTime, s);
-    pushToQueue(w1);
+    sem_post(&freeScotchArrWriteLock[scotchNumber]);
 }
 
 void *assignPersonToTap(void *args)
@@ -190,10 +117,11 @@ void *assignPersonToTap(void *args)
     int personId = *(int *)args;
     bool isWashed = false;
     vector<int> utensilWashOrder{0, 1, 2};
+
+    // Generating a random order in which the person will wash the utensil
     std::shuffle(begin(utensilWashOrder), end(utensilWashOrder), std::default_random_engine());
 
     int j = 0;
-
     while (!isWashed)
     {
         srand(time(0));
@@ -214,20 +142,56 @@ void *assignPersonToTap(void *args)
                 personStartTime[personId] = personEndTime[lastPersonIdTapAccessed[tapNumber]];
             }
 
+            // Updating the last PersonId who accessed the current acquired tap
             lastPersonIdTapAccessed[tapNumber] = personId;
 
             int currTime = personStartTime[personId];
 
             if (tapNumber == 0)
             {
-                // Wash utensil in a random order generated in the above logic on line 158
+                // Start Washing Utensil in the random order generated above
                 for (auto it : utensilWashOrder)
                 {
                     bool scotchTaken = false;
-                    while (!scotchTaken && isScotchAvailableThenTake(0))
+                    while (!scotchTaken)
                     {
-                        performWash(tapNumber, 0, personId, currTime, scotchTaken, it);
-                        break;
+                        if (isScotchAvailableThenTake(0))
+                        {
+                            // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
+                            if (lastPersonIdScotchAccessed[0] == -1)
+                            {
+                                lastPersonIdScotchAccessed[0] = personId;
+                            }
+                            // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
+                            else
+                            {
+                                currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[0]]);
+                                lastPersonIdScotchAccessed[0] = personId;
+                            }
+
+                            // Mark Scotch as taken so we wont busy wait for the next iteration to acquire the scotch
+                            scotchTaken = true;
+
+                            // we update the start time for the current utensil to the last time someone has used the scotch
+                            int startTime = currTime;
+                            currTime = currTime + washWithScotchTime[it];
+
+                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(0) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
+                            Logger::DEBUG(log.c_str());
+
+                            personEndTime[personId] = currTime;
+
+                            // We release the scotch 0 as we have already used it so someone else adjacent can use it
+                            releaseScotch(0);
+
+                            // We start washing the current utensil with water
+                            startTime = currTime;
+                            currTime = currTime + washWithTapTime[it];
+
+                            log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " with water start at: " + to_string(startTime) + " and finish at: " + to_string(currTime);
+                            Logger::DEBUG(log.c_str());
+                            break;
+                        }
                     }
                 }
                 isWashed = true;
@@ -235,13 +199,50 @@ void *assignPersonToTap(void *args)
             }
             else if (tapNumber == tapCount - 1)
             {
+                // Start Washing Utensil in the random order generated above
+
                 for (auto it : utensilWashOrder)
                 {
                     bool scotchTaken = false;
-                    while (!scotchTaken && isScotchAvailableThenTake(tapCount - 2))
+                    while (!scotchTaken)
                     {
-                        performWash(tapNumber, tapCount - 2, personId, currTime, scotchTaken, it);
-                        break;
+                        if (isScotchAvailableThenTake(tapCount - 2))
+                        {
+                            // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
+                            if (lastPersonIdScotchAccessed[tapCount - 2] == -1)
+                            {
+                                lastPersonIdScotchAccessed[tapCount - 2] = personId;
+                            }
+                            // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
+                            else
+                            {
+                                currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[tapCount - 2]]);
+                                lastPersonIdScotchAccessed[tapCount - 2] = personId;
+                            }
+
+                            // Mark Scotch as taken so we wont busy wait for the next iteration to acquire the scotch
+                            scotchTaken = true;
+
+                            // we update the start time for the current utensil to the last time someone has used the scotch
+                            int startTime = currTime;
+                            currTime = currTime + washWithScotchTime[it];
+
+                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(tapCount - 2) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
+                            Logger::DEBUG(log.c_str());
+
+                            personEndTime[personId] = currTime;
+
+                            // We release the scotch (tapCount-2) as we have already used it so someone else adjacent can use it
+                            releaseScotch(tapCount - 2);
+
+                            // We start washing the current utensil with water
+                            startTime = currTime;
+                            currTime = currTime + washWithTapTime[it];
+
+                            log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " with water start at: " + to_string(startTime) + " and finish at: " + to_string(currTime);
+                            Logger::DEBUG(log.c_str());
+                            break;
+                        }
                     }
                 }
                 isWashed = true;
@@ -249,6 +250,7 @@ void *assignPersonToTap(void *args)
             }
             else
             {
+                // Start Washing Utensil in the random order generated above
                 for (auto it : utensilWashOrder)
                 {
                     bool scotchTaken = false;
@@ -256,12 +258,70 @@ void *assignPersonToTap(void *args)
                     {
                         if (isScotchAvailableThenTake(tapNumber - 1))
                         {
-                            performWash(tapNumber, tapNumber - 1, personId, currTime, scotchTaken, it);
+                            // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
+                            if (lastPersonIdScotchAccessed[tapNumber - 1] == -1)
+                            {
+                                lastPersonIdScotchAccessed[tapNumber - 1] = personId;
+                            }
+                            // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
+                            else
+                            {
+                                currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[tapNumber - 1]]);
+                                lastPersonIdScotchAccessed[tapNumber - 1] = personId;
+                            }
+
+                            // Mark Scotch as taken so we wont busy wait for the next iteration to acquire the scotch
+                            scotchTaken = true;
+
+                            // we update the start time for the current utensil to the last time someone has used the scotch
+                            int startTime = currTime;
+                            currTime = currTime + washWithScotchTime[it];
+
+                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(tapNumber - 1) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
+                            Logger::DEBUG(log.c_str());
+
+                            personEndTime[personId] = currTime;
+
+                            // We release the scotch 0 as we have already used it so someone else adjacent can use it
+                            releaseScotch(tapNumber - 1);
+
+                            // We start washing the current utensil with water
+                            startTime = currTime;
+                            currTime = currTime + washWithTapTime[it];
+
+                            log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " with water start at: " + to_string(startTime) + " and finish at: " + to_string(currTime);
+                            Logger::DEBUG(log.c_str());
                             break;
                         }
                         if (isScotchAvailableThenTake(tapNumber))
                         {
-                            performWash(tapNumber, tapNumber, personId, currTime, scotchTaken, it);
+                            // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
+                            if (lastPersonIdScotchAccessed[tapNumber] == -1)
+                            {
+                                lastPersonIdScotchAccessed[tapNumber] = personId;
+                            }
+                            // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
+                            else
+                            {
+                                currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[tapNumber]]);
+                                lastPersonIdScotchAccessed[tapNumber] = personId;
+                            }
+
+                            scotchTaken = true;
+                            isWashed = true;
+                            int startTime = currTime;
+                            currTime = currTime + washWithScotchTime[it];
+                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(tapNumber) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
+                            Logger::DEBUG(log.c_str());
+                            personEndTime[personId] = currTime;
+
+                            releaseScotch(tapNumber);
+
+                            // after releasing the scotch wash the current utensil
+                            startTime = currTime;
+                            currTime = currTime + washWithTapTime[it];
+                            log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " with water start at: " + to_string(startTime) + " and finish at: " + to_string(currTime);
+                            Logger::DEBUG(log.c_str());
                             break;
                         }
                     }
@@ -273,13 +333,11 @@ void *assignPersonToTap(void *args)
         }
         j++;
     }
-    pthread_exit(NULL);
 }
 
 int main()
 {
     Logger::EnableFileOutput();
-    // Logger::DEBUG("main called");
 
     cin >> tapCount >> personCount;
 
@@ -290,18 +348,11 @@ int main()
     for (int i = 0; i < personCount; i++)
     {
         vect[i] = i;
-        pthread_create(&personThreadIds[livePersonThreads++], NULL, assignPersonToTap, &vect[i]);
+        pthread_create(&personThreadIds[i], NULL, assignPersonToTap, &vect[i]);
     }
     for (int i = 0; i < personCount; i++)
     {
         pthread_join(personThreadIds[i], NULL);
-    }
-
-    sort(resVect.begin(), resVect.end(), comp);
-
-    for (auto it : resVect)
-    {
-        Logger::DEBUG((it.res).c_str());
     }
 
     return 0;
