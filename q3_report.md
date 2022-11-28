@@ -38,3 +38,5 @@ Input can be positive or negative number
 
 ### SHARED MEMORY AND FORK IMPLEMENTATION
 ![Screenshot (145)](https://user-images.githubusercontent.com/110759150/204230471-27be7c9f-682f-4fcf-906e-eba5916e56c9.png)
+
+![Screenshot (146)](https://user-images.githubusercontent.com/110759150/204230670-ca11c5a8-a5a9-4528-a654-f2486c233430.png)
