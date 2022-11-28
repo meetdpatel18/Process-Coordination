@@ -1,29 +1,29 @@
 ## CONSTRAINTS
-INPUT CAN BE POSITIVE OR NEGATIVE NUMBER
+Input can be positive or negative number
 
 # SHARED MEMORY AND FORK IMPLEMENTATION
-- INPUT SIZE MUST NOT BE TOO LARGE (~1000) BECAUSE LARGE INPUT SIZE WILL LEAD TO MORE FORK CALLS AND WILL LEAD TO EVENTUALY LEAD TO SEGMENTATION FAULT AS MAIN MEMORY IS LIMITED
-- WE CREATED A SHARED MEMORY USING SHMGET,SHMAT OF SIZE EQUAL TO INPUT SIZE OF AN ARRAY
-- THEN WE ARE RECURSIVELY CALLING FORK FOR LEFT AND RIGHT CHILD FOR MERGESORT IMPLEMENTATION
-- WE WILL WAIT FOR CHILD PROCESS TO COMPLETE THEN WE WILL MERGE 
-
+- Input size must not be too large (~1000) because large input size will lead to more fork calls and will  eventually lead to segmentation fault as main memory is limited
+- We created a shared memory using SHMGET,SHMAT of size equal to input size of an array
+- Then we are recursively calling fork for left and right child for MERGESORT IMPLEMENTATION
+- We will wait for child process to complete then we will merge
+- Then shared memory is detached after sorting using SHMDT,SHMCTL 
 
 
 # THREAD IMPLEMENTATION
-- INPUT SIZE MUST NOT BE TOO LARGE (~1000) BECAUSE LARGE INPUT WILL LEAD TO CREATION OF TOO MANY THREADS WHICH WILL EVENTUALLY LEAD TO SEGMENTATION FAULT BECAUSE THREADS PER PROCESS ARE LIMITED IN LINUX
-- NEW THREAD WILL BE CREATED FOR EACH MERGESORT RECURSIVE CALL 
-- WE WILL WAIT FOR RECURSIVE CALLS TO COMPLETE BEFORE MERGING THEM
-- I HAVE DECLARED A VECTOR IN GLOBALLY SO THAT ALL THREADS CAN SHARE THIS
+- Input size must not be too large (~1000) because large input will lead to creation of too many threads which will eventually lead to segmentation fault because threads per process are limited in linux
+- New thread will be created for each mergesort recursive call 
+- We will wait for recursive calls to complete before merging them
+- I have declared a vector globally so that all threads can share this
 
 
 # PERFORMANCE REPORT
-- THREAD IMPLEMENTATION IS FASTER THAN FORK IMPLEMENTATION:
-    - BECAUSE IN FORK IMPLEMENTATION FOR BOTH RIGHT AND LEFT CHILD PROCESSES THERE WILL BE CACHE MISS 
-     THIS WILL LEAD TO DEGRADATION IN PERFORMANCE 
-    - IN THREAD IMPLEMENTATION RECUSRSIVE CALLS CAN ACCESS VECTOR AT THE SAME TIME CONCURRENTLY BECAUSE IT IS DECLARED IN A GLOBAL SCOPE AND THERE WILL NOT BE CACHE MISS      FOR EACH RECURSIVE CALLS
+- Thread implementation is faster than fork implementation:
+    - Because IN FORK IMPLEMENTATION for both right and left child processes there will be cache miss 
+     this will lead to degradation in performance 
+    - In THREAD IMPLEMENTATION recursive calls can access vector at the same time concurrently because it is declared in a global scope and there will not be cache miss      for recursive calls
 
 ## FINAL RESULT
 - NORMAL IMPLEMENTAION > THREAD IMPLEMENTATION > FORK IMPLEMENTATION
 
-- NORMAL IMPLEMENTATION IS FASTER THAN THREAD AND FORK 
-- THREAD IMPLEMENTATION IS FASTER THAN FORK
+- NORMAL IMPLEMENTATION is FASTER than THREAD AND FORK 
+- THREAD IMPLEMENTATION is FASTER than FORK
