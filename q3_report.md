@@ -30,3 +30,6 @@ Input can be positive or negative number
 
 ### SAMPLE INPUT
 ![Screenshot (143)](https://user-images.githubusercontent.com/110759150/204229346-dd7a89d1-1e8f-45e0-8c0f-4742fca17d5b.png)
+
+### NORMAL IMPLEMENTATION
+![Screenshot (149)](https://user-images.githubusercontent.com/110759150/204229658-0d2c6e7f-baa8-4153-8e22-a0244bef4393.png)
