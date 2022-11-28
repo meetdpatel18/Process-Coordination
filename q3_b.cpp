@@ -14,7 +14,7 @@
 
 using namespace std;
 
-vector<int>v;
+vector<float>v;
 int n1;
 clock_t start,e;
 
@@ -23,7 +23,7 @@ void selection_sort(int low,int high)
     int i=high-low+1;
 
     int j=low;
-    int min=v[low];
+    float min=v[low];
     int min_index=low;
     i--;
     while(i--)
@@ -50,7 +50,7 @@ void selection_sort(int low,int high)
 
 void merge(int low,int mid,int high)
 {
-    int v1[mid-low+2],v2[high-mid+1];
+    float v1[mid-low+2],v2[high-mid+1];
 
     int i;
     int zz=0;
@@ -61,7 +61,7 @@ void merge(int low,int mid,int high)
         zz++;
     }
 
-    v1[zz]=1e9;
+    v1[zz]=FLT_MAX;
 
     int j;
     int k=0;
@@ -72,7 +72,7 @@ void merge(int low,int mid,int high)
         k++;
     }
 
-    v2[k]=1e9;
+    v2[k]=FLT_MAX;
 
     i=0,j=0;
 
@@ -201,9 +201,16 @@ void solve(int low,int high)
     merge(low,mid,high);
 
 
-    for(int i=0;i<n1;i++)
+    // for(int i=0;i<n1;i++)
+    // {
+    //     cout<<v[i]<<" ";
+    // }
+
+    // cout<<endl;
+   for(int i=0;i<n1-1;i++)
     {
-        cout<<v[i]<<" ";
+        if(v[i] > v[i+1])
+            cout<<"false";
     }
 
     cout<<endl;
@@ -229,11 +236,11 @@ int main()
     // }
     n1=n;
 
-    vector<int>v1;
+    vector<float>v1;
 
     for(int i=0;i<n;i++)
     {
-        int a;
+        float a;
         cin>>a;
         v1.push_back(a);
     }

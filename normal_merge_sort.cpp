@@ -4,12 +4,12 @@
 
 using namespace std;
 
-void selection_sort(vector<int>&v,int low,int high)
+void selection_sort(vector<float>&v,int low,int high)
 {
     int i=high-low+1;
 
     int j=low;
-    int min=v[low];
+    float min=v[low];
     int min_index=low;
     i--;
     while(i--)
@@ -34,9 +34,9 @@ void selection_sort(vector<int>&v,int low,int high)
     return;
 }
 
-void merge(vector<int>&v,int low,int mid,int high)
+void merge(vector<float>&v,int low,int mid,int high)
 {
-    int v1[mid-low+2],v2[high-mid+1];
+    float v1[mid-low+2],v2[high-mid+1];
 
     int i;
     int zz=0;
@@ -46,7 +46,7 @@ void merge(vector<int>&v,int low,int mid,int high)
         zz++;
     }
 
-    v1[zz]=1e9;
+    v1[zz]=FLT_MAX;
 
     int j;
     int k=0;
@@ -56,7 +56,7 @@ void merge(vector<int>&v,int low,int mid,int high)
         k++;
     }
 
-    v2[k]=1e9;
+    v2[k]=FLT_MAX;
 
     i=0,j=0;
 
@@ -78,7 +78,7 @@ void merge(vector<int>&v,int low,int mid,int high)
 }
 
 
-void mergesort(vector<int>&v,int low,int high)
+void mergesort(vector<float>&v,int low,int high)
 {
     if(low>=high)
         return;
@@ -97,7 +97,7 @@ void mergesort(vector<int>&v,int low,int high)
 }
 
 
-void solve(vector<int>&v,int low,int high)
+void solve(vector<float>&v,int low,int high)
 {
     if(low>=high)
         return;
@@ -120,7 +120,7 @@ int main()
 {
     int n;
     cin>>n;
-    vector<int>v(n);
+    vector<float>v(n);
 
     clock_t start,end;
 
@@ -133,9 +133,18 @@ int main()
     start=clock();
      solve(v,0,n-1);
 
-    for(int i=0;i<n;i++)
+
+    // for(int i=0;i<n;i++)
+    // {
+    //     cout<<v[i]<<" ";
+    // }
+
+    // cout<<endl;
+    
+    for(int i=0;i<n-1;i++)
     {
-        cout<<v[i]<<" ";
+        if(v[i] > v[i+1])
+            cout<<"false"<<endl;
     }
 
     cout<<endl;

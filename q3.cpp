@@ -15,12 +15,12 @@
 using namespace std;
 
 
-void selection_sort(int v[],int low,int high)
+void selection_sort(float v[],int low,int high)
 {
     int i=high-low+1;
 
     int j=low;
-    int min=v[low];
+    float min=v[low];
     int min_index=low;
     i--;
     while(i--)
@@ -46,9 +46,9 @@ void selection_sort(int v[],int low,int high)
 }
 
 
-void merge(int v[],int low,int mid,int high)
+void merge(float v[],int low,int mid,int high)
 {
-    int v1[mid-low+2],v2[high-mid+1];
+    float v1[mid-low+2],v2[high-mid+1];
 
     int i;
     int zz=0;
@@ -58,7 +58,7 @@ void merge(int v[],int low,int mid,int high)
         zz++;
     }
 
-    v1[zz]=1e9;
+    v1[zz]=FLT_MAX;
 
     int j;
     int k=0;
@@ -68,7 +68,7 @@ void merge(int v[],int low,int mid,int high)
         k++;
     }
 
-    v2[k]=1e9;
+    v2[k]=FLT_MAX;
 
     i=0,j=0;
 
@@ -90,7 +90,7 @@ void merge(int v[],int low,int mid,int high)
 }
 
 
-void mergeSort(int v[],int low,int high)
+void mergeSort(float v[],int low,int high)
 {
 
 
@@ -138,7 +138,7 @@ void mergeSort(int v[],int low,int high)
 }
 
 
-void input_values(int v[],int len)
+void input_values(float v[],int len)
 {
     for(int i=0;i<len;i++)
     {
@@ -157,13 +157,13 @@ int main()
     
     clock_t start,end;
 
-    int *v;
+    float *v;
 
     // int protection=PROT_READ | PROT_WRITE;
 
     // int visibility=MAP_SHARED | MAP_ANONYMOUS;
 
-    size=n*sizeof(int);
+    size=n*sizeof(float);
     //v=(int*)mmap(NULL,size,protection,visibility,-1,0);
 
     int id;
@@ -183,7 +183,7 @@ int main()
         return 0;
     }
     
-    v=(int*)shmat(id,NULL,0);
+    v=(float*)shmat(id,NULL,0);
 
     input_values(v,n);
 
@@ -193,9 +193,18 @@ int main()
 
     mergeSort(v,0,n-1);
 
-    for(int i=0;i<n;i++)
+
+    // for(int i=0;i<n;i++)
+    // {
+    //     cout<<v[i]<<" ";
+    // }
+
+    // cout<<endl;
+
+    for(int i=0;i<n-1;i++)
     {
-        cout<<v[i]<<" ";
+        if(v[i] > v[i+1])
+            cout<<"false";
     }
 
     cout<<endl;
