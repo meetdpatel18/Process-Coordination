@@ -33,3 +33,5 @@ Input can be positive or negative number
 
 ### NORMAL IMPLEMENTATION
 ![Screenshot (149)](https://user-images.githubusercontent.com/110759150/204229658-0d2c6e7f-baa8-4153-8e22-a0244bef4393.png)
+
+![Screenshot (144)](https://user-images.githubusercontent.com/110759150/204230061-6ee1cfb5-5e44-4647-b286-815fe3b23d35.png)
