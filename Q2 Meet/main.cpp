@@ -14,11 +14,11 @@ vector<bool> freeTaps;
 vector<sem_t> freeTapArrWriteLock;
 vector<int> lastPersonIdTapAccessed;
 
-//----------Scotch Brite Variables-------------
-vector<bool> freeScotch;
-// free Scotch Semaphore
-vector<sem_t> freeScotchArrWriteLock;
-vector<int> lastPersonIdScotchAccessed;
+//----------Scrotch Brite Variables-------------
+vector<bool> freeScrotch;
+// free Scrotch Semaphore
+vector<sem_t> freeScrotchArrWriteLock;
+vector<int> lastPersonIdScrotchAccessed;
 
 //----------Person Variables-------------
 int personCount;
@@ -27,7 +27,7 @@ vector<pthread_t> personThreadIds;
 vector<int> personStartTime;
 vector<int> personEndTime;
 
-vector<int> washWithScotchTime{4, 3, 2};
+vector<int> washWithScrotchTime{4, 3, 2};
 vector<int> washWithTapTime{5, 3, 1};
 
 unordered_map<int, string> indexToUtensil;
@@ -35,7 +35,7 @@ unordered_map<int, string> indexToUtensil;
 void initSemaphores()
 {
     freeTapArrWriteLock.resize(tapCount);
-    freeScotchArrWriteLock.resize(tapCount - 1);
+    freeScrotchArrWriteLock.resize(tapCount - 1);
 
     // Initializing Tap variables
     for (int i = 0; i < tapCount; i++)
@@ -45,12 +45,12 @@ void initSemaphores()
         lastPersonIdTapAccessed.push_back(-1);
     }
 
-    // Initializing Scotch variables
+    // Initializing Scrotch variables
     for (int i = 0; i < tapCount - 1; i++)
     {
-        sem_init(&freeScotchArrWriteLock[i], 0, 1);
-        freeScotch.push_back(true);
-        lastPersonIdScotchAccessed.push_back(-1);
+        sem_init(&freeScrotchArrWriteLock[i], 0, 1);
+        freeScrotch.push_back(true);
+        lastPersonIdScrotchAccessed.push_back(-1);
     }
 
     personThreadIds.resize(personCount);
@@ -86,28 +86,28 @@ void releaseTap(int tapNumber)
     sem_post(&freeTapArrWriteLock[tapNumber]);
 }
 
-bool isScotchAvailableThenTake(int scotchNumber)
+bool isScrotchAvailableThenTake(int scrotchNumber)
 {
     bool isAvailable = false;
-    sem_wait(&freeScotchArrWriteLock[scotchNumber]);
+    sem_wait(&freeScrotchArrWriteLock[scrotchNumber]);
 
-    if (freeScotch[scotchNumber])
+    if (freeScrotch[scrotchNumber])
     {
-        freeScotch[scotchNumber] = false;
+        freeScrotch[scrotchNumber] = false;
         isAvailable = true;
     }
 
-    sem_post(&freeScotchArrWriteLock[scotchNumber]);
+    sem_post(&freeScrotchArrWriteLock[scrotchNumber]);
     return isAvailable;
 }
 
-void releaseScotch(int scotchNumber)
+void releaseScrotch(int scrotchNumber)
 {
-    sem_wait(&freeScotchArrWriteLock[scotchNumber]);
+    sem_wait(&freeScrotchArrWriteLock[scrotchNumber]);
 
-    freeScotch[scotchNumber] = true;
+    freeScrotch[scrotchNumber] = true;
 
-    sem_post(&freeScotchArrWriteLock[scotchNumber]);
+    sem_post(&freeScrotchArrWriteLock[scrotchNumber]);
 }
 
 void *assignPersonToTap(void *args)
@@ -152,37 +152,37 @@ void *assignPersonToTap(void *args)
                 // Start Washing Utensil in the random order generated above
                 for (auto it : utensilWashOrder)
                 {
-                    bool scotchTaken = false;
-                    while (!scotchTaken)
+                    bool scrotchTaken = false;
+                    while (!scrotchTaken)
                     {
-                        if (isScotchAvailableThenTake(0))
+                        if (isScrotchAvailableThenTake(0))
                         {
-                            // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
-                            if (lastPersonIdScotchAccessed[0] == -1)
+                            // if the scrotch which the person has acquired has not previously been used by any person then update the id to current personId
+                            if (lastPersonIdScrotchAccessed[0] == -1)
                             {
-                                lastPersonIdScotchAccessed[0] = personId;
+                                lastPersonIdScrotchAccessed[0] = personId;
                             }
-                            // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
+                            // if the scrotch was previously accessed than take the last accessed time of this scrotch and update the currTime for the person
                             else
                             {
-                                currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[0]]);
-                                lastPersonIdScotchAccessed[0] = personId;
+                                currTime = max(currTime, personEndTime[lastPersonIdScrotchAccessed[0]]);
+                                lastPersonIdScrotchAccessed[0] = personId;
                             }
 
-                            // Mark Scotch as taken so we wont busy wait for the next iteration to acquire the scotch
-                            scotchTaken = true;
+                            // Mark Scrotch as taken so we wont busy wait for the next iteration to acquire the scrotch
+                            scrotchTaken = true;
 
-                            // we update the start time for the current utensil to the last time someone has used the scotch
+                            // we update the start time for the current utensil to the last time someone has used the scrotch
                             int startTime = currTime;
-                            currTime = currTime + washWithScotchTime[it];
+                            currTime = currTime + washWithScrotchTime[it];
 
-                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(0) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
+                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scrotch brite " + to_string(0) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
                             Logger::DEBUG(log.c_str());
 
                             personEndTime[personId] = currTime;
 
-                            // We release the scotch 0 as we have already used it so someone else adjacent can use it
-                            releaseScotch(0);
+                            // We release the scrotch 0 as we have already used it so someone else adjacent can use it
+                            releaseScrotch(0);
 
                             // We start washing the current utensil with water
                             startTime = currTime;
@@ -203,37 +203,37 @@ void *assignPersonToTap(void *args)
 
                 for (auto it : utensilWashOrder)
                 {
-                    bool scotchTaken = false;
-                    while (!scotchTaken)
+                    bool scrotchTaken = false;
+                    while (!scrotchTaken)
                     {
-                        if (isScotchAvailableThenTake(tapCount - 2))
+                        if (isScrotchAvailableThenTake(tapCount - 2))
                         {
-                            // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
-                            if (lastPersonIdScotchAccessed[tapCount - 2] == -1)
+                            // if the scrotch which the person has acquired has not previously been used by any person then update the id to current personId
+                            if (lastPersonIdScrotchAccessed[tapCount - 2] == -1)
                             {
-                                lastPersonIdScotchAccessed[tapCount - 2] = personId;
+                                lastPersonIdScrotchAccessed[tapCount - 2] = personId;
                             }
-                            // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
+                            // if the scrotch was previously accessed than take the last accessed time of this scrotch and update the currTime for the person
                             else
                             {
-                                currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[tapCount - 2]]);
-                                lastPersonIdScotchAccessed[tapCount - 2] = personId;
+                                currTime = max(currTime, personEndTime[lastPersonIdScrotchAccessed[tapCount - 2]]);
+                                lastPersonIdScrotchAccessed[tapCount - 2] = personId;
                             }
 
-                            // Mark Scotch as taken so we wont busy wait for the next iteration to acquire the scotch
-                            scotchTaken = true;
+                            // Mark Scrotch as taken so we wont busy wait for the next iteration to acquire the scrotch
+                            scrotchTaken = true;
 
-                            // we update the start time for the current utensil to the last time someone has used the scotch
+                            // we update the start time for the current utensil to the last time someone has used the scrotch
                             int startTime = currTime;
-                            currTime = currTime + washWithScotchTime[it];
+                            currTime = currTime + washWithScrotchTime[it];
 
-                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(tapCount - 2) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
+                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scrotch brite " + to_string(tapCount - 2) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
                             Logger::DEBUG(log.c_str());
 
                             personEndTime[personId] = currTime;
 
-                            // We release the scotch (tapCount-2) as we have already used it so someone else adjacent can use it
-                            releaseScotch(tapCount - 2);
+                            // We release the scrotch (tapCount-2) as we have already used it so someone else adjacent can use it
+                            releaseScrotch(tapCount - 2);
 
                             // We start washing the current utensil with water
                             startTime = currTime;
@@ -253,37 +253,37 @@ void *assignPersonToTap(void *args)
                 // Start Washing Utensil in the random order generated above
                 for (auto it : utensilWashOrder)
                 {
-                    bool scotchTaken = false;
-                    while (!scotchTaken)
+                    bool scrotchTaken = false;
+                    while (!scrotchTaken)
                     {
-                        if (isScotchAvailableThenTake(tapNumber - 1))
+                        if (isScrotchAvailableThenTake(tapNumber - 1))
                         {
-                            // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
-                            if (lastPersonIdScotchAccessed[tapNumber - 1] == -1)
+                            // if the scrotch which the person has acquired has not previously been used by any person then update the id to current personId
+                            if (lastPersonIdScrotchAccessed[tapNumber - 1] == -1)
                             {
-                                lastPersonIdScotchAccessed[tapNumber - 1] = personId;
+                                lastPersonIdScrotchAccessed[tapNumber - 1] = personId;
                             }
-                            // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
+                            // if the scrotch was previously accessed than take the last accessed time of this scrotch and update the currTime for the person
                             else
                             {
-                                currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[tapNumber - 1]]);
-                                lastPersonIdScotchAccessed[tapNumber - 1] = personId;
+                                currTime = max(currTime, personEndTime[lastPersonIdScrotchAccessed[tapNumber - 1]]);
+                                lastPersonIdScrotchAccessed[tapNumber - 1] = personId;
                             }
 
-                            // Mark Scotch as taken so we wont busy wait for the next iteration to acquire the scotch
-                            scotchTaken = true;
+                            // Mark Scrotch as taken so we wont busy wait for the next iteration to acquire the scrotch
+                            scrotchTaken = true;
 
-                            // we update the start time for the current utensil to the last time someone has used the scotch
+                            // we update the start time for the current utensil to the last time someone has used the scrotch
                             int startTime = currTime;
-                            currTime = currTime + washWithScotchTime[it];
+                            currTime = currTime + washWithScrotchTime[it];
 
-                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(tapNumber - 1) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
+                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scrotch brite " + to_string(tapNumber - 1) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
                             Logger::DEBUG(log.c_str());
 
                             personEndTime[personId] = currTime;
 
-                            // We release the scotch 0 as we have already used it so someone else adjacent can use it
-                            releaseScotch(tapNumber - 1);
+                            // We release the scrotch 0 as we have already used it so someone else adjacent can use it
+                            releaseScrotch(tapNumber - 1);
 
                             // We start washing the current utensil with water
                             startTime = currTime;
@@ -293,31 +293,31 @@ void *assignPersonToTap(void *args)
                             Logger::DEBUG(log.c_str());
                             break;
                         }
-                        if (isScotchAvailableThenTake(tapNumber))
+                        if (isScrotchAvailableThenTake(tapNumber))
                         {
-                            // if the scotch which the person has acquired has not previously been used by any person then update the id to current personId
-                            if (lastPersonIdScotchAccessed[tapNumber] == -1)
+                            // if the scrotch which the person has acquired has not previously been used by any person then update the id to current personId
+                            if (lastPersonIdScrotchAccessed[tapNumber] == -1)
                             {
-                                lastPersonIdScotchAccessed[tapNumber] = personId;
+                                lastPersonIdScrotchAccessed[tapNumber] = personId;
                             }
-                            // if the scotch was previously accessed than take the last accessed time of this scotch and update the currTime for the person
+                            // if the scrotch was previously accessed than take the last accessed time of this scrotch and update the currTime for the person
                             else
                             {
-                                currTime = max(currTime, personEndTime[lastPersonIdScotchAccessed[tapNumber]]);
-                                lastPersonIdScotchAccessed[tapNumber] = personId;
+                                currTime = max(currTime, personEndTime[lastPersonIdScrotchAccessed[tapNumber]]);
+                                lastPersonIdScrotchAccessed[tapNumber] = personId;
                             }
 
-                            scotchTaken = true;
+                            scrotchTaken = true;
                             isWashed = true;
                             int startTime = currTime;
-                            currTime = currTime + washWithScotchTime[it];
-                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scotch brite " + to_string(tapNumber) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
+                            currTime = currTime + washWithScrotchTime[it];
+                            string log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " using scrotch brite " + to_string(tapNumber) + " start at: " + to_string(startTime) + " finish at: " + to_string(currTime);
                             Logger::DEBUG(log.c_str());
                             personEndTime[personId] = currTime;
 
-                            releaseScotch(tapNumber);
+                            releaseScrotch(tapNumber);
 
-                            // after releasing the scotch wash the current utensil
+                            // after releasing the scrotch wash the current utensil
                             startTime = currTime;
                             currTime = currTime + washWithTapTime[it];
                             log = "Person " + to_string(personId) + " Washed " + indexToUtensil[it] + " from tap " + to_string(tapNumber) + " with water start at: " + to_string(startTime) + " and finish at: " + to_string(currTime);
