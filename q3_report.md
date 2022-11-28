@@ -27,3 +27,6 @@ Input can be positive or negative number
 
 - NORMAL IMPLEMENTATION is FASTER than THREAD AND FORK 
 - THREAD IMPLEMENTATION is FASTER than FORK
+
+### SAMPLE INPUT
+![Screenshot (143)](https://user-images.githubusercontent.com/110759150/204229346-dd7a89d1-1e8f-45e0-8c0f-4742fca17d5b.png)
