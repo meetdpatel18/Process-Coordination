@@ -36,7 +36,8 @@ void selection_sort(vector<float>&v,int low,int high)
 
 void merge(vector<float>&v,int low,int mid,int high)
 {
-    float v1[mid-low+2],v2[high-mid+1];
+   //cout<<68768<<endl;
+    float v1[mid-low+1],v2[high-mid];
 
     int i;
     int zz=0;
@@ -46,7 +47,7 @@ void merge(vector<float>&v,int low,int mid,int high)
         zz++;
     }
 
-    v1[zz]=FLT_MAX;
+    //v1[zz]=FLT_MAX;
 
     int j;
     int k=0;
@@ -56,23 +57,40 @@ void merge(vector<float>&v,int low,int mid,int high)
         k++;
     }
 
-    v2[k]=FLT_MAX;
+    //v2[k]=FLT_MAX;
 
     i=0,j=0;
-
-    for(int k=low;k<=high;k++)
+    int kk=low;
+    //for(int k=low;k<=high;k++)
+    while((i<mid-low+1) && (j<high-mid))
     {
-
+        //cout<<5<<endl;
         if(v1[i] >= v2[j])
             {
-                v[k]=v2[j];
+                v[kk]=v2[j];
+                kk++;
                 j++;
             }
         else
         {
-            v[k]=v1[i];
+            v[kk]=v1[i];
+            kk++;
             i++;
         }
+    }
+
+    while(i< (mid-low+1))
+    {
+        v[kk]=v1[i];
+        kk++;
+        i++;
+    }
+
+    while(j< (high-mid))
+    {
+        v[kk]=v2[j];
+        kk++;
+        j++;
     }
     return;
 }
