@@ -122,7 +122,7 @@ int main()
     cin>>n;
     vector<float>v(n);
 
-    clock_t start,end;
+
 
 
     for(int i=0;i<n;i++)
@@ -130,10 +130,15 @@ int main()
         cin>>v[i];
     }
 
-    start=clock();
+
+    auto start = chrono::steady_clock::now();
      solve(v,0,n-1);
 
 
+    auto end = chrono::steady_clock::now();
+    auto diff = end - start;
+    cout << endl
+         << chrono::duration<double, milli>(diff).count() << " ms" << endl;
     // for(int i=0;i<n;i++)
     // {
     //     cout<<v[i]<<" ";
@@ -147,14 +152,6 @@ int main()
             cout<<"false"<<endl;
     }
 
-    cout<<endl;
-    end=clock();
-
-    double cpu_time_used=((double)(end-start))/CLOCKS_PER_SEC;
-
-    cout<<cpu_time_used<<endl;
-
-    cout<<endl;
 
     return 0;
 }

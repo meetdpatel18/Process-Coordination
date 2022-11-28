@@ -192,11 +192,6 @@ void solve(int low, int high)
 
     merge(low, mid, high);
 
-    for (int i = 0; i < n1; i++)
-    {
-        cout << v[i] << " ";
-    }
-
     // cout<<endl;
     // for (int i = 0; i < n1 - 1; i++)
     // {
