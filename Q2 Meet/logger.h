@@ -35,6 +35,13 @@ public:
         logger_instance.enable_file_output();
     }
 
+    static void CloseFile()
+    {
+        Logger &logger_instance = get_instance();
+        logger_instance.filepath = "log.txt";
+        logger_instance.free_file();
+    }
+
     template <typename... Args>
     static void DEBUG(const char *message, Args... args)
     {
@@ -94,15 +101,15 @@ private:
             strftime(buffer, 80, "%c", timestamp);
 
             std::scoped_lock lock(log_mutex);
-            printf("%s  ", buffer);
-            printf("%s", message_priority_str);
+            printf("%s\t", buffer);
+            printf("%s\t", message_priority_str);
             printf(message, args...);
             printf("\n");
 
             if (file)
             {
-                fprintf(file, "%s   ", buffer);
-                fprintf(file, message_priority_str);
+                // fprintf(file, "%s\t", buffer);
+                // fprintf(file, message_priority_str);
                 fprintf(file, message, args...);
                 fprintf(file, "\n");
             }
